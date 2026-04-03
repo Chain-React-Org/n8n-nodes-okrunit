@@ -1,6 +1,6 @@
 {
     "name": "n8n-nodes-okrunit",
-    "version": "0.1.0",
+    "version": "0.3.0",
     "description": "n8n community node for OKRunit human-in-the-loop approval gateway",
     "license": "MIT",
     "homepage": "https://okrunit.com/docs/integrations/n8n",
@@ -17,8 +17,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/okrunit/okrunit.git",
-        "directory": "integrations/n8n"
+        "url": "https://github.com/nstoddard17/n8n-nodes-okrunit.git"
     },
    "scripts": {
 		"build": "n8n-node build",
