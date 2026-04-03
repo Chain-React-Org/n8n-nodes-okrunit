@@ -1,0 +1,18 @@
+{
+	"node": "n8n-nodes-okrunit.oKRunit",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Communication", "Productivity"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://okrunit.com/docs/integrations/n8n"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://okrunit.com/docs/integrations/n8n"
+			}
+		]
+	}
+}
