@@ -1,4 +1,10 @@
-import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
+import {
+	NodeConnectionTypes,
+	type ILoadOptionsFunctions,
+	type INodePropertyOptions,
+	type INodeType,
+	type INodeTypeDescription,
+} from 'n8n-workflow';
 import { approvalDescription } from './resources/approval';
 import { commentDescription } from './resources/comment';
 
@@ -81,5 +87,23 @@ export class OKRunit implements INodeType {
 			...approvalDescription,
 			...commentDescription,
 		],
+	};
+
+	methods = {
+		loadOptions: {
+			async getActionTypes(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const response = await this.helpers.httpRequestWithAuthentication.call(this,
+					this.getNodeParameter('authentication', 0) === 'oAuth2' ? 'okrunitOAuth2Api' : 'okrunitApi',
+					{
+						method: 'GET',
+						url: 'https://okrunit.com/api/v1/org/action-types',
+						json: true,
+					},
+				);
+
+				const types: string[] = response.data ?? [];
+				return types.map((t) => ({ name: t, value: t }));
+			},
+		},
 	};
 }

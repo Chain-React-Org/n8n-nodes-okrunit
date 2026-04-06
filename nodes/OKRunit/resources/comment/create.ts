@@ -26,4 +26,20 @@ export const commentCreateDescription: INodeProperties[] = [
 			},
 		},
 	},
+	{
+		// Always send source: "n8n" in the body
+		displayName: 'Source',
+		name: 'source',
+		type: 'hidden',
+		default: 'n8n',
+		displayOptions: {
+			show: showOnlyForCommentCreate,
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'source',
+			},
+		},
+	},
 ];

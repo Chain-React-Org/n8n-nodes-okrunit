@@ -90,10 +90,12 @@ export const approvalCreateDescription: INodeProperties[] = [
 			{
 				displayName: 'Action Type',
 				name: 'actionType',
-				type: 'string',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getActionTypes',
+				},
 				default: '',
-				placeholder: 'e.g. deploy, delete, publish',
-				description: 'Category of action being approved',
+				description: 'Category of action being approved. Select from the list or switch to expression mode to enter a custom value — new types are auto-registered in your organization.',
 				routing: {
 					send: {
 						type: 'body',

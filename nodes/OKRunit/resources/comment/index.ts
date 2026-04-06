@@ -38,6 +38,16 @@ export const commentDescription: INodeProperties[] = [
 						method: 'GET',
 						url: '=/api/v1/approvals/{{$parameter.approvalId}}/comments',
 					},
+					output: {
+						postReceive: [
+							{
+								type: 'rootProperty',
+								properties: {
+									property: 'data',
+								},
+							},
+						],
+					},
 				},
 			},
 		],

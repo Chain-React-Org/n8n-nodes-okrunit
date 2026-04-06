@@ -1,5 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { approvalCreateDescription } from './create';
+import { approvalCreateLogDescription } from './createLog';
 import { approvalGetDescription } from './get';
 import { approvalGetAllDescription } from './getAll';
 
@@ -22,6 +23,18 @@ export const approvalDescription: INodeProperties[] = [
 				value: 'create',
 				action: 'Create an approval request',
 				description: 'Create a new approval request for human review',
+				routing: {
+					request: {
+						method: 'POST',
+						url: '/api/v1/approvals',
+					},
+				},
+			},
+			{
+				name: 'Create Activity Log',
+				value: 'createLog',
+				action: 'Create an activity log',
+				description: 'Log an activity for audit/tracking. Does not create an approval — the workflow continues immediately.',
 				routing: {
 					request: {
 						method: 'POST',
@@ -67,6 +80,7 @@ export const approvalDescription: INodeProperties[] = [
 		default: 'create',
 	},
 	...approvalCreateDescription,
+	...approvalCreateLogDescription,
 	...approvalGetDescription,
 	...approvalGetAllDescription,
 ];

@@ -16,4 +16,15 @@ export const commentGetAllDescription: INodeProperties[] = [
 		default: true,
 		description: 'Whether to return all results or only up to a given limit',
 	},
+	{
+		displayName: 'Output Fields',
+		name: 'outputFields',
+		type: 'notice',
+		displayOptions: {
+			show: showOnlyForCommentGetAll,
+		},
+		default: '',
+		description:
+			'Each comment includes: id, request_id, body, source (dashboard, n8n, zapier, make, api, etc.), user_id, connection_id, created_at, updated_at',
+	},
 ];
