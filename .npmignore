@@ -1,0 +1,8 @@
+node_modules/
+*.tgz
+src/
+nodes/
+credentials/
+icons/
+tsconfig.json
+.prettierrc.js
