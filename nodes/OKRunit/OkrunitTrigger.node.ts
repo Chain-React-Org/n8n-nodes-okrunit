@@ -23,7 +23,7 @@ export class OKRunitTrigger implements INodeType {
 		subtitle: '={{$parameter["triggerType"]}}',
 		description: 'Fires when approvals are created or decided in OKRunit',
 		defaults: { name: 'OKRunit Trigger' },
-		usableAsTool: false,
+		usableAsTool: true,
 		inputs: [],
 		outputs: ['main'],
 		polling: true,
