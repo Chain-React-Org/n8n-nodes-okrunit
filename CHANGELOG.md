@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 (2026-04-07)
+
+### Added
+- **OKRunit Trigger node** — Polling trigger with two events:
+  - **New Approval Request** — fires when new approvals are created, with status and priority filters
+  - **Approval Decided** — fires when approvals are approved or rejected, with decision type and priority filters
+- Trigger supports both API Key and OAuth2 authentication
+
 ## 0.3.3 (2026-04-07)
 
 ### Changed
