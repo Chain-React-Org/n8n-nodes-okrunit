@@ -12,7 +12,7 @@ export class OKRunit implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'OKRunit',
 		name: 'oKRunit',
-		icon: 'file:../../icons/okrunit.png',
+		icon: 'file:../../icons/okrunit.svg',
 		group: ['output'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',

@@ -88,14 +88,14 @@ export const approvalCreateDescription: INodeProperties[] = [
 		},
 		options: [
 			{
-				displayName: 'Action Type',
+				displayName: 'Action Type Name or ID',
 				name: 'actionType',
 				type: 'options',
 				typeOptions: {
 					loadOptionsMethod: 'getActionTypes',
 				},
 				default: '',
-				description: 'Category of action being approved. Select from the list or switch to expression mode to enter a custom value — new types are auto-registered in your organization.',
+				description: 'Category of action being approved. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. New types are auto-registered in your organization. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				routing: {
 					send: {
 						type: 'body',

@@ -10,7 +10,7 @@ export class OKRunitApi implements ICredentialType {
 
 	displayName = 'OKRunit API';
 
-	icon = 'file:../icons/okrunit.png' as const;
+	icon = 'file:../icons/okrunit.svg' as const;
 
 	documentationUrl = 'https://okrunit.com/docs/integrations/n8n';
 
