@@ -13,7 +13,7 @@ interface ApprovalRecord {
 	[key: string]: unknown;
 }
 
-export class OKRunitTrigger implements INodeType {
+export class OkrunitTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'OKRunit Trigger',
 		name: 'okrunitTrigger',
