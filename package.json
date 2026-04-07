@@ -1,6 +1,6 @@
 {
     "name": "n8n-nodes-okrunit",
-    "version": "0.4.6",
+    "version": "0.5.0",
     "description": "n8n community node for OKRunit human-in-the-loop approval gateway",
     "license": "MIT",
     "homepage": "https://okrunit.com/docs/integrations/n8n",
@@ -40,7 +40,8 @@
         ],
         "nodes": [
             "dist/nodes/OKRunit/OKRunit.node.js",
-            "dist/nodes/OKRunit/OkrunitTrigger.node.js"
+            "dist/nodes/OKRunit/OkrunitNewApprovalTrigger.node.js",
+            "dist/nodes/OKRunit/OkrunitApprovalDecidedTrigger.node.js"
         ]
     },
     "devDependencies": {
