@@ -9,6 +9,7 @@ import type {
 interface ApprovalRecord {
 	id: string;
 	decided_at: string | null;
+	is_log: boolean;
 	[key: string]: unknown;
 }
 
@@ -123,7 +124,7 @@ export class OkrunitApprovalDecidedTrigger implements INodeType {
 			const approvals: ApprovalRecord[] = response.data ?? [];
 
 			for (const approval of approvals) {
-				if (approval.decided_at && !seenSet.has(approval.id)) {
+				if (approval.decided_at && !seenSet.has(approval.id) && !approval.is_log) {
 					results.push({ json: approval as unknown as IDataObject });
 					seenSet.add(approval.id);
 				}
