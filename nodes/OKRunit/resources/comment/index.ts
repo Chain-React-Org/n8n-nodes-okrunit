@@ -17,9 +17,9 @@ export const commentDescription: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Add',
+				name: 'Add a Comment to an Approval',
 				value: 'create',
-				action: 'Add a comment to an approval',
+				action: 'Add a Comment to an Approval',
 				description: 'Add a comment to an approval request',
 				routing: {
 					request: {
@@ -31,7 +31,7 @@ export const commentDescription: INodeProperties[] = [
 			{
 				name: 'Get Many',
 				value: 'getAll',
-				action: 'List comments on an approval',
+				action: 'List Comments from an Approval',
 				description: 'List many comments on an approval request',
 				routing: {
 					request: {

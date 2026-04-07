@@ -19,9 +19,9 @@ export const approvalDescription: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Create',
+				name: 'Create an Approval Request',
 				value: 'create',
-				action: 'Create an approval request',
+				action: 'Create an Approval Request',
 				description: 'Create a new approval request for human review',
 				routing: {
 					request: {
@@ -31,9 +31,9 @@ export const approvalDescription: INodeProperties[] = [
 				},
 			},
 			{
-				name: 'Create Activity Log',
+				name: 'Create an Activity Log',
 				value: 'createLog',
-				action: 'Create an activity log',
+				action: 'Create an Activity Log',
 				description: 'Log an activity for audit/tracking. Does not create an approval — the workflow continues immediately.',
 				routing: {
 					request: {
@@ -43,10 +43,10 @@ export const approvalDescription: INodeProperties[] = [
 				},
 			},
 			{
-				name: 'Get',
+				name: 'Find an Approval Request',
 				value: 'get',
-				action: 'Get an approval request',
-				description: 'Get a single approval request by ID',
+				action: 'Find an Approval Request',
+				description: 'Find a single approval request by ID',
 				routing: {
 					request: {
 						method: 'GET',
@@ -57,8 +57,8 @@ export const approvalDescription: INodeProperties[] = [
 			{
 				name: 'Get Many',
 				value: 'getAll',
-				action: 'List approval requests',
-				description: 'Get many approval requests',
+				action: 'List Approval Requests',
+				description: 'List approval requests with filters',
 				routing: {
 					request: {
 						method: 'GET',
