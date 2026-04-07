@@ -17,7 +17,7 @@ export class OkrunitTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'OKRunit Trigger',
 		name: 'okrunitTrigger',
-		icon: 'file:../../icons/okrunit.svg',
+		icon: 'file:../../icons/okrunit.png',
 		group: ['trigger'],
 		version: 1,
 		subtitle: '={{$parameter["triggerType"]}}',
