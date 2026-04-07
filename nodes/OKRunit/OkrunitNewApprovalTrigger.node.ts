@@ -99,8 +99,7 @@ export class OkrunitNewApprovalTrigger implements INodeType {
 		const credentialType = authType === 'oAuth2' ? 'okrunitOAuth2Api' : 'okrunitApi';
 
 		const webhookData = this.getWorkflowStaticData('node');
-		const lastPollTime = webhookData.lastPollTime as string | undefined;
-		webhookData.lastPollTime = new Date().toISOString();
+		const seenIds = (webhookData.seenIds as string[] | undefined) ?? [];
 
 		const statusFilter = this.getNodeParameter('statusFilter') as string;
 		const priorityFilter = this.getNodeParameter('priorityFilter') as string;
@@ -122,14 +121,18 @@ export class OkrunitNewApprovalTrigger implements INodeType {
 
 		const approvals: ApprovalRecord[] = response.data ?? [];
 		const results: INodeExecutionData[] = [];
+		const seenSet = new Set(seenIds);
 
 		for (const approval of approvals) {
-			if (lastPollTime && approval.created_at > lastPollTime) {
+			if (!seenSet.has(approval.id)) {
 				results.push({ json: approval as unknown as IDataObject });
-			} else if (!lastPollTime) {
-				results.push({ json: approval as unknown as IDataObject });
+				seenSet.add(approval.id);
 			}
 		}
+
+		// Keep only the most recent 200 IDs to prevent unbounded growth
+		const allIds = Array.from(seenSet);
+		webhookData.seenIds = allIds.slice(-200);
 
 		if (results.length === 0) return null;
 		return [results];

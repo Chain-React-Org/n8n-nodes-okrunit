@@ -3,9 +3,9 @@
 ## 0.4.0 (2026-04-07)
 
 ### Added
-- **OKRunit Trigger node** — Polling trigger with two events:
-  - **New Approval Request** — fires when new approvals are created, with status and priority filters
-  - **Approval Decided** — fires when approvals are approved or rejected, with decision type and priority filters
+- **OKRunit Trigger node.** Polling trigger with two events:
+  - **New Approval Request** - fires when new approvals are created, with status and priority filters
+  - **Approval Decided** - fires when approvals are approved or rejected, with decision type and priority filters
 - Trigger supports both API Key and OAuth2 authentication
 
 ## 0.3.3 (2026-04-07)
@@ -17,9 +17,9 @@
 ## 0.3.2 (2026-04-06)
 
 ### Added
-- **Create Activity Log** operation — Log activities for audit/tracking without creating an approval request. Matches the Zapier "Create Activity Log" action.
-- **Dynamic Action Type dropdown** — Create Approval now loads your organization's action types from the API. Custom values can be entered via expression mode and are auto-registered in your organization.
-- **Comment source attribution** — Comments created from n8n now display with the n8n logo and "App" badge in the OKRunit dashboard instead of generic "API".
+- **Create Activity Log** operation. Log activities for audit/tracking without creating an approval request. Matches the Zapier "Create Activity Log" action.
+- **Dynamic Action Type dropdown.** Create Approval now loads your organization's action types from the API. Custom values can be entered via expression mode and are auto-registered in your organization.
+- **Comment source attribution.** Comments created from n8n now display with the n8n logo and "App" badge in the OKRunit dashboard instead of generic "API".
 
 ### Fixed
 - **Comment Get Many** now correctly unwraps the API response and returns individual comment objects with full details (id, body, source, user_id, connection_id, created_at).

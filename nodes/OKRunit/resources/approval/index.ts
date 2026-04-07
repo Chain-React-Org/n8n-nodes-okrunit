@@ -34,7 +34,7 @@ export const approvalDescription: INodeProperties[] = [
 				name: 'Create an Activity Log',
 				value: 'createLog',
 				action: 'Create an activity log',
-				description: 'Log an activity for audit/tracking. Does not create an approval — the workflow continues immediately.',
+				description: 'Log an activity for audit/tracking. Does not create an approval. The workflow continues immediately.',
 				routing: {
 					request: {
 						method: 'POST',

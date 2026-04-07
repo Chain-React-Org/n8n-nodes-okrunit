@@ -96,14 +96,14 @@ export class OkrunitApprovalDecidedTrigger implements INodeType {
 		const credentialType = authType === 'oAuth2' ? 'okrunitOAuth2Api' : 'okrunitApi';
 
 		const webhookData = this.getWorkflowStaticData('node');
-		const lastPollTime = webhookData.lastPollTime as string | undefined;
-		webhookData.lastPollTime = new Date().toISOString();
+		const seenIds = (webhookData.seenIds as string[] | undefined) ?? [];
 
 		const decisionFilter = this.getNodeParameter('decisionFilter') as string;
 		const priorityFilter = this.getNodeParameter('priorityFilter') as string;
 
 		const statuses = decisionFilter === 'any' ? ['approved', 'rejected'] : [decisionFilter];
 		const results: INodeExecutionData[] = [];
+		const seenSet = new Set(seenIds);
 
 		for (const status of statuses) {
 			const qs: Record<string, string> = { status, page_size: '50' };
@@ -123,13 +123,16 @@ export class OkrunitApprovalDecidedTrigger implements INodeType {
 			const approvals: ApprovalRecord[] = response.data ?? [];
 
 			for (const approval of approvals) {
-				if (lastPollTime && approval.decided_at && approval.decided_at > lastPollTime) {
+				if (approval.decided_at && !seenSet.has(approval.id)) {
 					results.push({ json: approval as unknown as IDataObject });
-				} else if (!lastPollTime && approval.decided_at) {
-					results.push({ json: approval as unknown as IDataObject });
+					seenSet.add(approval.id);
 				}
 			}
 		}
+
+		// Keep only the most recent 200 IDs to prevent unbounded growth
+		const allIds = Array.from(seenSet);
+		webhookData.seenIds = allIds.slice(-200);
 
 		if (results.length === 0) return null;
 		return [results];
