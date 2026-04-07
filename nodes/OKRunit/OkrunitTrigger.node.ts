@@ -1,10 +1,9 @@
-import {
-	NodeConnectionTypes,
-	type IDataObject,
-	type IPollFunctions,
-	type INodeExecutionData,
-	type INodeType,
-	type INodeTypeDescription,
+import type {
+	IDataObject,
+	IPollFunctions,
+	INodeExecutionData,
+	INodeType,
+	INodeTypeDescription,
 } from 'n8n-workflow';
 
 interface ApprovalRecord {
@@ -24,9 +23,9 @@ export class OKRunitTrigger implements INodeType {
 		subtitle: '={{$parameter["triggerType"]}}',
 		description: 'Fires when approvals are created or decided in OKRunit',
 		defaults: { name: 'OKRunit Trigger' },
-		usableAsTool: true,
+		usableAsTool: false,
 		inputs: [],
-		outputs: [NodeConnectionTypes.Main],
+		outputs: ['main'],
 		polling: true,
 		credentials: [
 			{
