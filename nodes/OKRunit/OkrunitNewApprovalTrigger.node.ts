@@ -100,7 +100,8 @@ export class OkrunitNewApprovalTrigger implements INodeType {
 		const credentialType = authType === 'oAuth2' ? 'okrunitOAuth2Api' : 'okrunitApi';
 
 		const webhookData = this.getWorkflowStaticData('node');
-		const seenIds = (webhookData.seenIds as string[] | undefined) ?? [];
+		const isFirstPoll = webhookData.initialized !== true;
+		const lastPollTime = webhookData.lastPollTime as string | undefined;
 
 		const statusFilter = this.getNodeParameter('statusFilter') as string;
 		const priorityFilter = this.getNodeParameter('priorityFilter') as string;
@@ -121,19 +122,23 @@ export class OkrunitNewApprovalTrigger implements INodeType {
 		)) as { data?: ApprovalRecord[] };
 
 		const approvals: ApprovalRecord[] = response.data ?? [];
-		const results: INodeExecutionData[] = [];
-		const seenSet = new Set(seenIds);
 
-		for (const approval of approvals) {
-			if (!seenSet.has(approval.id) && !approval.is_log) {
-				results.push({ json: approval as unknown as IDataObject });
-				seenSet.add(approval.id);
-			}
+		// Save the current timestamp for next poll
+		webhookData.lastPollTime = new Date().toISOString();
+		webhookData.initialized = true;
+
+		// On first poll, just record the timestamp — don't trigger on existing approvals
+		if (isFirstPoll) {
+			return null;
 		}
 
-		// Keep only the most recent 200 IDs to prevent unbounded growth
-		const allIds = Array.from(seenSet);
-		webhookData.seenIds = allIds.slice(-200);
+		// On subsequent polls, only return approvals created after last poll
+		const results: INodeExecutionData[] = [];
+		for (const approval of approvals) {
+			if (!approval.is_log && lastPollTime && approval.created_at > lastPollTime) {
+				results.push({ json: approval as unknown as IDataObject });
+			}
+		}
 
 		if (results.length === 0) return null;
 		return [results];
