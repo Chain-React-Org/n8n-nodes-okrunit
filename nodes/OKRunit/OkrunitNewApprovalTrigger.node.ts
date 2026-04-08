@@ -106,7 +106,9 @@ export class OkrunitNewApprovalTrigger implements INodeType {
 		const statusFilter = this.getNodeParameter('statusFilter') as string;
 		const priorityFilter = this.getNodeParameter('priorityFilter') as string;
 
-		const qs: Record<string, string> = { page_size: '50' };
+		// Exclude approvals created by this workflow
+		const workflowId = this.getWorkflow().id;
+		const qs: Record<string, string> = { page_size: '50', exclude_source_id: `n8n-${workflowId}` };
 		if (statusFilter) qs.status = statusFilter;
 		if (priorityFilter) qs.priority = priorityFilter;
 

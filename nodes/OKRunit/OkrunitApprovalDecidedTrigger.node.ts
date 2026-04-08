@@ -105,6 +105,9 @@ export class OkrunitApprovalDecidedTrigger implements INodeType {
 
 		const statuses = decisionFilter === 'any' ? ['approved', 'rejected'] : [decisionFilter];
 
+		// Exclude approvals created by this workflow
+		const workflowId = this.getWorkflow().id;
+
 		// Save the current timestamp for next poll
 		webhookData.lastPollTime = new Date().toISOString();
 		webhookData.initialized = true;
@@ -118,7 +121,7 @@ export class OkrunitApprovalDecidedTrigger implements INodeType {
 		const results: INodeExecutionData[] = [];
 
 		for (const status of statuses) {
-			const qs: Record<string, string> = { status, page_size: '50' };
+			const qs: Record<string, string> = { status, page_size: '50', exclude_source_id: `n8n-${workflowId}` };
 			if (priorityFilter) qs.priority = priorityFilter;
 
 			const response = (await this.helpers.httpRequestWithAuthentication.call(

@@ -62,6 +62,22 @@ export const approvalCreateDescription: INodeProperties[] = [
 		},
 	},
 	{
+		// Send the n8n workflow ID so triggers can filter out self-created approvals
+		displayName: 'Source ID',
+		name: 'sourceId',
+		type: 'hidden',
+		default: '=n8n-{{$workflow.id}}',
+		displayOptions: {
+			show: showOnlyForApprovalCreate,
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'source_id',
+			},
+		},
+	},
+	{
 		// Auto-generate an idempotency key
 		displayName: 'Idempotency Key',
 		name: 'idempotencyKey',

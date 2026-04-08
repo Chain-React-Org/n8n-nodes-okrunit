@@ -56,6 +56,22 @@ export const approvalCreateLogDescription: INodeProperties[] = [
 		},
 	},
 	{
+		// Send the n8n workflow ID so triggers can filter out self-created items
+		displayName: 'Source ID',
+		name: 'logSourceId',
+		type: 'hidden',
+		default: '=n8n-{{$workflow.id}}',
+		displayOptions: {
+			show: showOnlyForLogCreate,
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'source_id',
+			},
+		},
+	},
+	{
 		// Auto-generate an idempotency key
 		displayName: 'Idempotency Key',
 		name: 'logIdempotencyKey',
