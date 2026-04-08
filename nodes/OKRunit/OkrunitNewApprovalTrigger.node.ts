@@ -100,8 +100,8 @@ export class OkrunitNewApprovalTrigger implements INodeType {
 		const credentialType = authType === 'oAuth2' ? 'okrunitOAuth2Api' : 'okrunitApi';
 
 		const webhookData = this.getWorkflowStaticData('node');
-		const isFirstPoll = webhookData.initialized !== true;
-		const lastPollTime = webhookData.lastPollTime as string | undefined;
+		const seenIds = new Set<string>((webhookData.seenIds as string[] | undefined) ?? []);
+		const isFirstPoll = seenIds.size === 0 && webhookData.initialized !== true;
 
 		const statusFilter = this.getNodeParameter('statusFilter') as string;
 		const priorityFilter = this.getNodeParameter('priorityFilter') as string;
@@ -124,23 +124,33 @@ export class OkrunitNewApprovalTrigger implements INodeType {
 		)) as { data?: ApprovalRecord[] };
 
 		const approvals: ApprovalRecord[] = response.data ?? [];
-
-		// Save the current timestamp for next poll
-		webhookData.lastPollTime = new Date().toISOString();
-		webhookData.initialized = true;
-
-		// On first poll, just record the timestamp — don't trigger on existing approvals
-		if (isFirstPoll) {
-			return null;
-		}
-
-		// On subsequent polls, only return approvals created after last poll
 		const results: INodeExecutionData[] = [];
-		for (const approval of approvals) {
-			if (!approval.is_log && lastPollTime && approval.created_at > lastPollTime) {
-				results.push({ json: approval as unknown as IDataObject });
+
+		if (isFirstPoll) {
+			// First poll: seed seen IDs with all current approvals so we don't
+			// re-trigger on old ones, but DO trigger on any created in the last
+			// 2 minutes (they might have just been created before activation)
+			const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+			for (const approval of approvals) {
+				seenIds.add(approval.id);
+				if (!approval.is_log && approval.created_at > twoMinutesAgo) {
+					results.push({ json: approval as unknown as IDataObject });
+				}
+			}
+		} else {
+			// Subsequent polls: only trigger on unseen approvals
+			for (const approval of approvals) {
+				if (!seenIds.has(approval.id) && !approval.is_log) {
+					results.push({ json: approval as unknown as IDataObject });
+				}
+				seenIds.add(approval.id);
 			}
 		}
+
+		// Persist seen IDs (cap at 500 to prevent unbounded growth)
+		const allIds = Array.from(seenIds);
+		webhookData.seenIds = allIds.slice(-500);
+		webhookData.initialized = true;
 
 		if (results.length === 0) return null;
 		return [results];

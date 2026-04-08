@@ -97,27 +97,15 @@ export class OkrunitApprovalDecidedTrigger implements INodeType {
 		const credentialType = authType === 'oAuth2' ? 'okrunitOAuth2Api' : 'okrunitApi';
 
 		const webhookData = this.getWorkflowStaticData('node');
-		const isFirstPoll = webhookData.initialized !== true;
-		const lastPollTime = webhookData.lastPollTime as string | undefined;
+		const seenIds = new Set<string>((webhookData.seenIds as string[] | undefined) ?? []);
+		const isFirstPoll = seenIds.size === 0 && webhookData.initialized !== true;
 
 		const decisionFilter = this.getNodeParameter('decisionFilter') as string;
 		const priorityFilter = this.getNodeParameter('priorityFilter') as string;
 
 		const statuses = decisionFilter === 'any' ? ['approved', 'rejected'] : [decisionFilter];
-
-		// Exclude approvals created by this workflow
 		const workflowId = this.getWorkflow().id;
 
-		// Save the current timestamp for next poll
-		webhookData.lastPollTime = new Date().toISOString();
-		webhookData.initialized = true;
-
-		// On first poll, just record the timestamp — don't trigger on existing decisions
-		if (isFirstPoll) {
-			return null;
-		}
-
-		// On subsequent polls, only return approvals decided after last poll
 		const results: INodeExecutionData[] = [];
 
 		for (const status of statuses) {
@@ -137,12 +125,29 @@ export class OkrunitApprovalDecidedTrigger implements INodeType {
 
 			const approvals: ApprovalRecord[] = response.data ?? [];
 
-			for (const approval of approvals) {
-				if (!approval.is_log && approval.decided_at && lastPollTime && approval.decided_at > lastPollTime) {
-					results.push({ json: approval as unknown as IDataObject });
+			if (isFirstPoll) {
+				// First poll: seed seen IDs, trigger on decisions from last 2 minutes
+				const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+				for (const approval of approvals) {
+					seenIds.add(approval.id);
+					if (!approval.is_log && approval.decided_at && approval.decided_at > twoMinutesAgo) {
+						results.push({ json: approval as unknown as IDataObject });
+					}
+				}
+			} else {
+				for (const approval of approvals) {
+					if (!seenIds.has(approval.id) && !approval.is_log && approval.decided_at) {
+						results.push({ json: approval as unknown as IDataObject });
+					}
+					seenIds.add(approval.id);
 				}
 			}
 		}
+
+		// Persist seen IDs (cap at 500)
+		const allIds = Array.from(seenIds);
+		webhookData.seenIds = allIds.slice(-500);
+		webhookData.initialized = true;
 
 		if (results.length === 0) return null;
 		return [results];
