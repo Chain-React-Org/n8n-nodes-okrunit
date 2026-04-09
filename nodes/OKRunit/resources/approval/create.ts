@@ -21,6 +21,63 @@ export const approvalCreateDescription: INodeProperties[] = [
 			'Pre-fill fields from a saved template. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 	{
+		displayName: 'Title',
+		name: 'title',
+		type: 'string',
+		default: '',
+		displayOptions: {
+			show: showOnlyForApprovalCreate,
+		},
+		description:
+			'Title of the approval request. Leave blank to use the template default.',
+	},
+	{
+		displayName: 'Description',
+		name: 'description',
+		type: 'string',
+		typeOptions: {
+			rows: 4,
+		},
+		default: '',
+		displayOptions: {
+			show: showOnlyForApprovalCreate,
+		},
+		description:
+			'Detailed description providing context for the reviewer. Leave blank to use the template default.',
+	},
+	{
+		displayName: 'Priority',
+		name: 'priority',
+		type: 'options',
+		options: [
+			{ name: 'Use Template Default', value: '' },
+			{ name: 'Low', value: 'low' },
+			{ name: 'Medium', value: 'medium' },
+			{ name: 'High', value: 'high' },
+			{ name: 'Critical', value: 'critical' },
+		],
+		default: '',
+		displayOptions: {
+			show: showOnlyForApprovalCreate,
+		},
+		description:
+			'Priority level. Leave as "Use Template Default" to use the template priority.',
+	},
+	{
+		displayName: 'Action Type Name or ID',
+		name: 'actionType',
+		type: 'options',
+		typeOptions: {
+			loadOptionsMethod: 'getActionTypes',
+		},
+		default: '',
+		displayOptions: {
+			show: showOnlyForApprovalCreate,
+		},
+		description:
+			'Category of action being approved. Leave blank to use the template default. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+	},
+	{
 		displayName: 'Wait for Decision',
 		name: 'waitForDecision',
 		type: 'boolean',
@@ -42,39 +99,6 @@ export const approvalCreateDescription: INodeProperties[] = [
 		},
 		options: [
 			{
-				displayName: 'Title',
-				name: 'title',
-				type: 'string',
-				default: '',
-				description:
-					'Title of the approval request. If blank and a template is selected, the template title is used.',
-			},
-			{
-				displayName: 'Priority',
-				name: 'priority',
-				type: 'options',
-				options: [
-					{ name: 'Low', value: 'low' },
-					{ name: 'Medium', value: 'medium' },
-					{ name: 'High', value: 'high' },
-					{ name: 'Critical', value: 'critical' },
-				],
-				default: '',
-				description:
-					'Priority level. If not set and a template is selected, the template priority is used.',
-			},
-			{
-				displayName: 'Action Type Name or ID',
-				name: 'actionType',
-				type: 'options',
-				typeOptions: {
-					loadOptionsMethod: 'getActionTypes',
-				},
-				default: '',
-				description:
-					'Category of action being approved. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-			},
-			{
 				displayName: 'Callback URL',
 				name: 'callbackUrl',
 				type: 'string',
@@ -93,17 +117,6 @@ export const approvalCreateDescription: INodeProperties[] = [
 				default: '',
 				description:
 					'Rich HTML content displayed to approvers for additional context',
-			},
-			{
-				displayName: 'Description',
-				name: 'description',
-				type: 'string',
-				typeOptions: {
-					rows: 4,
-				},
-				default: '',
-				description:
-					'Detailed description providing context for the reviewer',
 			},
 			{
 				displayName: 'Expires At',
