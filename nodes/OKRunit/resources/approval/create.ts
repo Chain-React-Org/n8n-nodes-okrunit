@@ -52,7 +52,7 @@ export const approvalCreateDescription: INodeProperties[] = [
 		displayName: 'Wait for Decision',
 		name: 'waitForDecision',
 		type: 'boolean',
-		default: false,
+		default: true,
 		displayOptions: {
 			show: showOnlyForApprovalCreate,
 		},
