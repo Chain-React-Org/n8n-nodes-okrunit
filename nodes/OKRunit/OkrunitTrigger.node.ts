@@ -16,13 +16,13 @@ interface ApprovalRecord {
 
 export class OkrunitTrigger implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'OKRunit Trigger',
+		displayName: 'OKrunit Trigger',
 		name: 'okrunitTrigger',
 		icon: 'file:../../icons/okrunit.png',
 		group: ['trigger'],
 		version: 1,
 		description: 'Fires when approval events occur in OKRunit',
-		defaults: { name: 'OKRunit Trigger' },
+		defaults: { name: 'OKrunit Trigger' },
 		usableAsTool: true,
 		inputs: [],
 		outputs: ['main'],

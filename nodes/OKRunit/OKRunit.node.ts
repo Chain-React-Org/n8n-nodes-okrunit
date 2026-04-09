@@ -16,7 +16,7 @@ import { commentDescription } from './resources/comment';
 
 export class OKRunit implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'OKRunit',
+		displayName: 'OKrunit',
 		name: 'oKRunit',
 		icon: 'file:../../icons/okrunit.png',
 		group: ['output'],
@@ -24,7 +24,7 @@ export class OKRunit implements INodeType {
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description: 'Human-in-the-loop approval gateway',
 		defaults: {
-			name: 'OKRunit',
+			name: 'OKrunit',
 		},
 		usableAsTool: true,
 		inputs: [NodeConnectionTypes.Main],
