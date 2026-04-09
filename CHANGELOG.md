@@ -4,14 +4,17 @@
 
 ### Breaking
 - **Removed standalone "OKRunit Request Approval" node.** Its functionality has been consolidated into the main OKRunit node. Existing workflows using the standalone node will need to be updated to use the OKRunit node with the "Create an Approval Request" operation and "Wait for Decision" enabled.
+- **Removed standalone "New Approval Trigger" and "Approval Decided Trigger" nodes.** Both have been consolidated into a single "OKRunit Trigger" node with an Event selector. Existing trigger workflows will need to be updated.
 
 ### Added
 - **Template field on Create Approval.** Select a saved template to pre-fill fields when creating an approval request.
 - **"Wait for Decision" toggle on Create Approval.** When enabled, the workflow pauses until a human approves or rejects, then resumes automatically. Replaces the need for the standalone Request Approval node.
+- **Unified "OKRunit Trigger" node** with Event dropdown: "New Approval Request" and "Approval Decided". Replaces the two standalone trigger nodes.
 
 ### Changed
 - Converted OKRunit node from declarative to programmatic style to support the wait-for-decision flow.
 - Removed unused declarative routing from all property definitions.
+- Package now ships only two nodes: OKRunit (actions) and OKRunit Trigger (events).
 
 ## 0.4.0 (2026-04-07)
 
