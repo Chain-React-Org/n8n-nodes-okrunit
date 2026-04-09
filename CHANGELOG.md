@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.2 (2026-04-09)
+
+### Fixed
+- **Wait for Decision now works with self-hosted n8n.** When n8n runs on localhost or a private network, the node automatically switches from callback (which OKRunit cannot reach) to polling mode. It polls the approval status every 5 seconds until a decision is made. Cloud/public n8n instances continue to use the instant callback approach.
+
 ## 0.9.0 (2026-04-08)
 
 ### Breaking

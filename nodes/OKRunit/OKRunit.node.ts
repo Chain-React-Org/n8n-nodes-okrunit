@@ -1,6 +1,7 @@
 import {
 	NodeConnectionTypes,
 	NodeApiError,
+	NodeOperationError,
 	WAIT_INDEFINITELY,
 	type IDataObject,
 	type IExecuteFunctions,
@@ -13,6 +14,38 @@ import {
 } from 'n8n-workflow';
 import { approvalDescription } from './resources/approval';
 import { commentDescription } from './resources/comment';
+
+const POLL_INTERVAL_MS = 5_000;
+
+/** Returns true if the URL points to a local/private address. */
+function isLocalUrl(urlString: string): boolean {
+	try {
+		const url = new URL(urlString);
+		const h = url.hostname.toLowerCase();
+		if (
+			h === 'localhost' ||
+			h === '127.0.0.1' ||
+			h === '::1' ||
+			h === '[::1]' ||
+			h === '0.0.0.0' ||
+			h.endsWith('.local')
+		) {
+			return true;
+		}
+		const parts = h.split('.');
+		if (parts.length === 4 && parts.every((p) => /^\d+$/.test(p))) {
+			const [a, b] = parts.map(Number);
+			if (a === 10) return true;
+			if (a === 172 && b >= 16 && b <= 31) return true;
+			if (a === 192 && b === 168) return true;
+			if (a === 169 && b === 254) return true;
+			if (a === 127) return true;
+		}
+		return false;
+	} catch {
+		return false;
+	}
+}
 
 export class OKRunit implements INodeType {
 	description: INodeTypeDescription = {
@@ -114,7 +147,7 @@ export class OKRunit implements INodeType {
 						: 'okrunitApi',
 					{
 						method: 'GET',
-						url: 'https://okrunit.com/api/v1/templates',
+						url: 'https://okrunit.com/api/v1/templates?target_app=n8n',
 						json: true,
 					},
 				);
@@ -205,12 +238,21 @@ export class OKRunit implements INodeType {
 							}
 						}
 
+						// Determine resume strategy: callback (cloud) or poll (local)
+						let usePolling = false;
 						if (waitForDecision) {
 							const resumeUrl = this.evaluateExpression(
 								'{{$execution.resumeUrl}}',
 								i,
 							) as string;
-							body.callback_url = resumeUrl;
+
+							if (isLocalUrl(resumeUrl)) {
+								// n8n is self-hosted on a local/private network.
+								// OKRunit cannot reach it, so we poll instead.
+								usePolling = true;
+							} else {
+								body.callback_url = resumeUrl;
+							}
 						} else if (additionalFields.callbackUrl) {
 							body.callback_url = additionalFields.callbackUrl;
 						}
@@ -227,12 +269,70 @@ export class OKRunit implements INodeType {
 								},
 							);
 
+						if (waitForDecision && usePolling) {
+							// Poll until the approval is decided
+							const approvalData = (response as IDataObject)
+								.data as IDataObject | undefined;
+							const approvalId =
+								approvalData?.id ??
+								(response as IDataObject).id;
+
+							if (!approvalId) {
+								throw new NodeOperationError(
+									this.getNode(),
+									'Could not determine approval ID from response',
+									{ itemIndex: i },
+								);
+							}
+
+							let decided = false;
+							let result: IDataObject = response as IDataObject;
+
+							while (!decided) {
+								await new Promise((resolve) =>
+									setTimeout(resolve, POLL_INTERVAL_MS),
+								);
+
+								const pollResponse =
+									await this.helpers.httpRequestWithAuthentication.call(
+										this,
+										credentialType,
+										{
+											method: 'GET',
+											url: `${baseURL}/api/v1/approvals/${approvalId}`,
+											json: true,
+										},
+									);
+
+								const pollData = (pollResponse as IDataObject)
+									.data as IDataObject | undefined;
+								const status =
+									pollData?.status ??
+									(pollResponse as IDataObject).status;
+
+								if (
+									status &&
+									status !== 'pending'
+								) {
+									decided = true;
+									result = pollData ?? (pollResponse as IDataObject);
+								}
+							}
+
+							returnData.push({
+								json: result,
+								pairedItem: { item: i },
+							});
+							return [returnData];
+						}
+
 						returnData.push({
 							json: response as IDataObject,
 							pairedItem: { item: i },
 						});
 
 						if (waitForDecision) {
+							// Cloud/public n8n: use callback to resume
 							await this.putExecutionToWait(WAIT_INDEFINITELY);
 							return [returnData];
 						}
