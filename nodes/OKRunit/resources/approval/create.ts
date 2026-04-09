@@ -7,34 +7,6 @@ const showOnlyForApprovalCreate = {
 
 export const approvalCreateDescription: INodeProperties[] = [
 	{
-		displayName: 'Title',
-		name: 'title',
-		type: 'string',
-		default: 'Approval request from n8n',
-		displayOptions: {
-			show: showOnlyForApprovalCreate,
-		},
-		description:
-			'Title of the approval request. Defaults to "Approval request from n8n" if left blank.',
-	},
-	{
-		displayName: 'Priority',
-		name: 'priority',
-		type: 'options',
-		required: true,
-		options: [
-			{ name: 'Low', value: 'low' },
-			{ name: 'Medium', value: 'medium' },
-			{ name: 'High', value: 'high' },
-			{ name: 'Critical', value: 'critical' },
-		],
-		default: 'medium',
-		displayOptions: {
-			show: showOnlyForApprovalCreate,
-		},
-		description: 'Priority level of the approval request',
-	},
-	{
 		displayName: 'Template Name or ID',
 		name: 'templateId',
 		type: 'options',
@@ -69,6 +41,28 @@ export const approvalCreateDescription: INodeProperties[] = [
 			show: showOnlyForApprovalCreate,
 		},
 		options: [
+			{
+				displayName: 'Title',
+				name: 'title',
+				type: 'string',
+				default: '',
+				description:
+					'Title of the approval request. If blank and a template is selected, the template title is used.',
+			},
+			{
+				displayName: 'Priority',
+				name: 'priority',
+				type: 'options',
+				options: [
+					{ name: 'Low', value: 'low' },
+					{ name: 'Medium', value: 'medium' },
+					{ name: 'High', value: 'high' },
+					{ name: 'Critical', value: 'critical' },
+				],
+				default: '',
+				description:
+					'Priority level. If not set and a template is selected, the template priority is used.',
+			},
 			{
 				displayName: 'Action Type Name or ID',
 				name: 'actionType',

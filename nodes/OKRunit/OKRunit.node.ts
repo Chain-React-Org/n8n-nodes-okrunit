@@ -181,16 +181,6 @@ export class OKRunit implements INodeType {
 
 				if (resource === 'approval') {
 					if (operation === 'create') {
-						const title = this.getNodeParameter(
-							'title',
-							i,
-							'Approval request from n8n',
-						) as string;
-						const priority = this.getNodeParameter(
-							'priority',
-							i,
-							'medium',
-						) as string;
 						const templateId = this.getNodeParameter(
 							'templateId',
 							i,
@@ -208,8 +198,6 @@ export class OKRunit implements INodeType {
 						) as IDataObject;
 
 						const body: IDataObject = {
-							title,
-							priority,
 							source: 'n8n',
 							source_id: `n8n-${workflowId}`,
 							idempotency_key: waitForDecision
@@ -218,6 +206,10 @@ export class OKRunit implements INodeType {
 						};
 
 						if (templateId) body.template_id = templateId;
+						if (additionalFields.title)
+							body.title = additionalFields.title;
+						if (additionalFields.priority)
+							body.priority = additionalFields.priority;
 						if (additionalFields.actionType)
 							body.action_type = additionalFields.actionType;
 						if (additionalFields.description)
