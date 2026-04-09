@@ -75,6 +75,16 @@ export class OkrunitRequestApproval implements INodeType {
 				description: 'Priority level of the approval request',
 			},
 			{
+				displayName: 'Template Name or ID',
+				name: 'templateId',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getTemplates',
+				},
+				default: '',
+				description: 'Pre-fill fields from a saved template. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+			},
+			{
 				displayName: 'Action Type Name or ID',
 				name: 'actionType',
 				type: 'options',
@@ -82,7 +92,7 @@ export class OkrunitRequestApproval implements INodeType {
 					loadOptionsMethod: 'getActionTypes',
 				},
 				default: '',
-				 
+
 				description: 'Category of action being approved. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
@@ -152,6 +162,27 @@ export class OkrunitRequestApproval implements INodeType {
 				const types: string[] = response.data ?? [];
 				return types.map((t) => ({ name: t, value: t }));
 			},
+			async getTemplates(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					this.getNodeParameter('authentication', 0) === 'oAuth2'
+						? 'okrunitOAuth2Api'
+						: 'okrunitApi',
+					{
+						method: 'GET',
+						url: 'https://okrunit.com/api/v1/templates',
+						json: true,
+					},
+				);
+				const templates: { id: string; name: string; description?: string }[] = response.data ?? [];
+				return [
+					{ name: '(None)', value: '' },
+					...templates.map((t) => ({
+						name: t.description ? `${t.name} - ${t.description}` : t.name,
+						value: t.id,
+					})),
+				];
+			},
 		},
 	};
 
@@ -165,6 +196,7 @@ export class OkrunitRequestApproval implements INodeType {
 		for (let i = 0; i < items.length; i++) {
 			const title = this.getNodeParameter('title', i, 'Approval request from n8n') as string;
 			const priority = this.getNodeParameter('priority', i, 'medium') as string;
+			const templateId = this.getNodeParameter('templateId', i, '') as string;
 			const actionType = this.getNodeParameter('actionType', i, '') as string;
 			const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
 
@@ -180,6 +212,7 @@ export class OkrunitRequestApproval implements INodeType {
 				callback_url: resumeUrl,
 			};
 
+			if (templateId) body.template_id = templateId;
 			if (actionType) body.action_type = actionType;
 			if (additionalFields.description) body.description = additionalFields.description;
 			if (additionalFields.contextHtml) body.context_html = additionalFields.contextHtml;
