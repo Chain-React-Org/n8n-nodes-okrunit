@@ -14,13 +14,8 @@ export const approvalCreateDescription: INodeProperties[] = [
 		displayOptions: {
 			show: showOnlyForApprovalCreate,
 		},
-		description: 'Title of the approval request. Defaults to "Approval request from n8n" if left blank.',
-		routing: {
-			send: {
-				type: 'body',
-				property: 'title',
-			},
-		},
+		description:
+			'Title of the approval request. Defaults to "Approval request from n8n" if left blank.',
 	},
 	{
 		displayName: 'Priority',
@@ -38,60 +33,31 @@ export const approvalCreateDescription: INodeProperties[] = [
 			show: showOnlyForApprovalCreate,
 		},
 		description: 'Priority level of the approval request',
-		routing: {
-			send: {
-				type: 'body',
-				property: 'priority',
-			},
-		},
 	},
 	{
-		// Always send source: "n8n" in the body
-		displayName: 'Source',
-		name: 'source',
-		type: 'hidden',
-		default: 'n8n',
+		displayName: 'Template Name or ID',
+		name: 'templateId',
+		type: 'options',
+		typeOptions: {
+			loadOptionsMethod: 'getTemplates',
+		},
+		default: '',
 		displayOptions: {
 			show: showOnlyForApprovalCreate,
 		},
-		routing: {
-			send: {
-				type: 'body',
-				property: 'source',
-			},
-		},
+		description:
+			'Pre-fill fields from a saved template. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 	{
-		// Send the n8n workflow ID so triggers can filter out self-created approvals
-		displayName: 'Source ID',
-		name: 'sourceId',
-		type: 'hidden',
-		default: '=n8n-{{$workflow.id}}',
+		displayName: 'Wait for Decision',
+		name: 'waitForDecision',
+		type: 'boolean',
+		default: false,
 		displayOptions: {
 			show: showOnlyForApprovalCreate,
 		},
-		routing: {
-			send: {
-				type: 'body',
-				property: 'source_id',
-			},
-		},
-	},
-	{
-		// Auto-generate an idempotency key
-		displayName: 'Idempotency Key',
-		name: 'idempotencyKey',
-		type: 'hidden',
-		default: '={{$guid}}',
-		displayOptions: {
-			show: showOnlyForApprovalCreate,
-		},
-		routing: {
-			send: {
-				type: 'body',
-				property: 'idempotency_key',
-			},
-		},
+		description:
+			'Whether to pause the workflow and wait for a human to approve or reject before continuing',
 	},
 	{
 		displayName: 'Additional Fields',
@@ -111,13 +77,8 @@ export const approvalCreateDescription: INodeProperties[] = [
 					loadOptionsMethod: 'getActionTypes',
 				},
 				default: '',
-				description: 'Category of action being approved. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>. New types are auto-registered in your organization. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-				routing: {
-					send: {
-						type: 'body',
-						property: 'action_type',
-					},
-				},
+				description:
+					'Category of action being approved. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 			},
 			{
 				displayName: 'Callback URL',
@@ -125,13 +86,8 @@ export const approvalCreateDescription: INodeProperties[] = [
 				type: 'string',
 				default: '',
 				placeholder: 'https://...',
-				description: 'Webhook URL to receive the approval decision',
-				routing: {
-					send: {
-						type: 'body',
-						property: 'callback_url',
-					},
-				},
+				description:
+					'Webhook URL to receive the approval decision. Ignored when "Wait for Decision" is enabled.',
 			},
 			{
 				displayName: 'Context HTML',
@@ -141,13 +97,8 @@ export const approvalCreateDescription: INodeProperties[] = [
 					rows: 4,
 				},
 				default: '',
-				description: 'Rich HTML content displayed to approvers for additional context',
-				routing: {
-					send: {
-						type: 'body',
-						property: 'context_html',
-					},
-				},
+				description:
+					'Rich HTML content displayed to approvers for additional context',
 			},
 			{
 				displayName: 'Description',
@@ -157,40 +108,24 @@ export const approvalCreateDescription: INodeProperties[] = [
 					rows: 4,
 				},
 				default: '',
-				description: 'Detailed description providing context for the reviewer',
-				routing: {
-					send: {
-						type: 'body',
-						property: 'description',
-					},
-				},
+				description:
+					'Detailed description providing context for the reviewer',
 			},
 			{
 				displayName: 'Expires At',
 				name: 'expiresAt',
 				type: 'dateTime',
 				default: '',
-				description: 'When the approval request should automatically expire',
-				routing: {
-					send: {
-						type: 'body',
-						property: 'expires_at',
-					},
-				},
+				description:
+					'When the approval request should automatically expire',
 			},
 			{
 				displayName: 'Metadata',
 				name: 'metadata',
 				type: 'json',
 				default: '{}',
-				description: 'Arbitrary JSON data to attach to the approval request',
-				routing: {
-					send: {
-						type: 'body',
-						property: 'metadata',
-						value: '={{JSON.parse($value)}}',
-					},
-				},
+				description:
+					'Arbitrary JSON data to attach to the approval request',
 			},
 			{
 				displayName: 'Required Approvals',
@@ -201,13 +136,8 @@ export const approvalCreateDescription: INodeProperties[] = [
 					maxValue: 10,
 				},
 				default: 1,
-				description: 'Number of approvals needed before the request is approved',
-				routing: {
-					send: {
-						type: 'body',
-						property: 'required_approvals',
-					},
-				},
+				description:
+					'Number of approvals needed before the request is approved',
 			},
 		],
 	},

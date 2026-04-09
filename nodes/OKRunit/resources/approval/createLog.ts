@@ -16,76 +16,6 @@ export const approvalCreateLogDescription: INodeProperties[] = [
 			show: showOnlyForLogCreate,
 		},
 		description: 'Short title for the activity log entry (max 500 characters)',
-		routing: {
-			send: {
-				type: 'body',
-				property: 'title',
-			},
-		},
-	},
-	{
-		// Always send source: "n8n"
-		displayName: 'Source',
-		name: 'logSource',
-		type: 'hidden',
-		default: 'n8n',
-		displayOptions: {
-			show: showOnlyForLogCreate,
-		},
-		routing: {
-			send: {
-				type: 'body',
-				property: 'source',
-			},
-		},
-	},
-	{
-		// Always send is_log: true
-		displayName: 'Is Log',
-		name: 'isLog',
-		type: 'hidden',
-		default: true,
-		displayOptions: {
-			show: showOnlyForLogCreate,
-		},
-		routing: {
-			send: {
-				type: 'body',
-				property: 'is_log',
-			},
-		},
-	},
-	{
-		// Send the n8n workflow ID so triggers can filter out self-created items
-		displayName: 'Source ID',
-		name: 'logSourceId',
-		type: 'hidden',
-		default: '=n8n-{{$workflow.id}}',
-		displayOptions: {
-			show: showOnlyForLogCreate,
-		},
-		routing: {
-			send: {
-				type: 'body',
-				property: 'source_id',
-			},
-		},
-	},
-	{
-		// Auto-generate an idempotency key
-		displayName: 'Idempotency Key',
-		name: 'logIdempotencyKey',
-		type: 'hidden',
-		default: '={{$guid}}',
-		displayOptions: {
-			show: showOnlyForLogCreate,
-		},
-		routing: {
-			send: {
-				type: 'body',
-				property: 'idempotency_key',
-			},
-		},
 	},
 	{
 		displayName: 'Additional Fields',
@@ -106,12 +36,6 @@ export const approvalCreateLogDescription: INodeProperties[] = [
 				},
 				default: '',
 				description: 'Detailed description (max 5000 characters)',
-				routing: {
-					send: {
-						type: 'body',
-						property: 'description',
-					},
-				},
 			},
 			{
 				displayName: 'Source URL',
@@ -119,13 +43,8 @@ export const approvalCreateLogDescription: INodeProperties[] = [
 				type: 'string',
 				default: '',
 				placeholder: 'https://...',
-				description: 'URL of the n8n workflow or source system for reference',
-				routing: {
-					send: {
-						type: 'body',
-						property: 'source_url',
-					},
-				},
+				description:
+					'URL of the n8n workflow or source system for reference',
 			},
 			{
 				displayName: 'Metadata',
@@ -133,13 +52,6 @@ export const approvalCreateLogDescription: INodeProperties[] = [
 				type: 'json',
 				default: '{}',
 				description: 'Arbitrary JSON data to attach to the log entry',
-				routing: {
-					send: {
-						type: 'body',
-						property: 'metadata',
-						value: '={{JSON.parse($value)}}',
-					},
-				},
 			},
 		],
 	},

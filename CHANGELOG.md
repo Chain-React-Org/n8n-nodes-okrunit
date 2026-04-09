@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.0 (2026-04-08)
+
+### Breaking
+- **Removed standalone "OKRunit Request Approval" node.** Its functionality has been consolidated into the main OKRunit node. Existing workflows using the standalone node will need to be updated to use the OKRunit node with the "Create an Approval Request" operation and "Wait for Decision" enabled.
+
+### Added
+- **Template field on Create Approval.** Select a saved template to pre-fill fields when creating an approval request.
+- **"Wait for Decision" toggle on Create Approval.** When enabled, the workflow pauses until a human approves or rejects, then resumes automatically. Replaces the need for the standalone Request Approval node.
+
+### Changed
+- Converted OKRunit node from declarative to programmatic style to support the wait-for-decision flow.
+- Removed unused declarative routing from all property definitions.
+
 ## 0.4.0 (2026-04-07)
 
 ### Added

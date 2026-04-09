@@ -7,6 +7,16 @@ const showOnlyForApprovalGetAll = {
 
 export const approvalGetAllDescription: INodeProperties[] = [
 	{
+		displayName: 'Return All',
+		name: 'returnAll',
+		type: 'boolean',
+		displayOptions: {
+			show: showOnlyForApprovalGetAll,
+		},
+		default: false,
+		description: 'Whether to return all results or only up to a given limit',
+	},
+	{
 		displayName: 'Limit',
 		name: 'limit',
 		type: 'number',
@@ -21,47 +31,7 @@ export const approvalGetAllDescription: INodeProperties[] = [
 			maxValue: 100,
 		},
 		default: 50,
-		routing: {
-			send: {
-				type: 'query',
-				property: 'page_size',
-			},
-			output: {
-				maxResults: '={{$value}}',
-			},
-		},
 		description: 'Max number of results to return',
-	},
-	{
-		displayName: 'Return All',
-		name: 'returnAll',
-		type: 'boolean',
-		displayOptions: {
-			show: showOnlyForApprovalGetAll,
-		},
-		default: false,
-		description: 'Whether to return all results or only up to a given limit',
-		routing: {
-			send: {
-				paginate: '={{ $value }}',
-				type: 'query',
-				property: 'page_size',
-				value: '100',
-			},
-			operations: {
-				pagination: {
-					type: 'generic',
-					properties: {
-						continue: '={{ $response.body.data.length > 0 && $response.body.data.length >= 100 }}',
-						request: {
-							qs: {
-								page: '={{ ($request.qs?.page ? Number($request.qs.page) : 1) + 1 }}',
-							},
-						},
-					},
-				},
-			},
-		},
 	},
 	{
 		displayName: 'Filters',
@@ -85,12 +55,6 @@ export const approvalGetAllDescription: INodeProperties[] = [
 				],
 				default: 'pending',
 				description: 'Filter approvals by status',
-				routing: {
-					send: {
-						type: 'query',
-						property: 'status',
-					},
-				},
 			},
 			{
 				displayName: 'Priority',
@@ -104,12 +68,6 @@ export const approvalGetAllDescription: INodeProperties[] = [
 				],
 				default: 'medium',
 				description: 'Filter approvals by priority',
-				routing: {
-					send: {
-						type: 'query',
-						property: 'priority',
-					},
-				},
 			},
 			{
 				displayName: 'Search',
@@ -117,12 +75,6 @@ export const approvalGetAllDescription: INodeProperties[] = [
 				type: 'string',
 				default: '',
 				description: 'Search approvals by title or description',
-				routing: {
-					send: {
-						type: 'query',
-						property: 'search',
-					},
-				},
 			},
 		],
 	},

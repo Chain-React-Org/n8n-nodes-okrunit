@@ -21,34 +21,12 @@ export const commentDescription: INodeProperties[] = [
 				value: 'create',
 				action: 'Add a comment to an approval',
 				description: 'Add a comment to an approval request',
-				routing: {
-					request: {
-						method: 'POST',
-						url: '=/api/v1/approvals/{{$parameter.approvalId}}/comments',
-					},
-				},
 			},
 			{
 				name: 'Get Many',
 				value: 'getAll',
 				action: 'List comments from an approval',
 				description: 'List many comments on an approval request',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '=/api/v1/approvals/{{$parameter.approvalId}}/comments',
-					},
-					output: {
-						postReceive: [
-							{
-								type: 'rootProperty',
-								properties: {
-									property: 'data',
-								},
-							},
-						],
-					},
-				},
 			},
 		],
 		default: 'create',
