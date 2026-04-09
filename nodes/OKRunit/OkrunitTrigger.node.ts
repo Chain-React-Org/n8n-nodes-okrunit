@@ -21,7 +21,8 @@ export class OkrunitTrigger implements INodeType {
 		icon: 'file:../../icons/okrunit.png',
 		group: ['trigger'],
 		version: 1,
-		subtitle: '={{$parameter["event"] === "approvalDecided" ? "Approval Decided" : "New Approval Request"}}',
+		subtitle:
+			'={{$parameter["event"] === "approvalDecided" ? "Approval Decided" : "New Approval Request"}}',
 		description: 'Fires when approval events occur in OKRunit',
 		defaults: { name: 'OKrunit Trigger' },
 		usableAsTool: true,
@@ -143,16 +144,14 @@ export class OkrunitTrigger implements INodeType {
 		const event = this.getNodeParameter('event') as string;
 
 		const webhookData = this.getWorkflowStaticData('node');
-		const seenIds = new Set<string>(
-			(webhookData.seenIds as string[] | undefined) ?? [],
-		);
-		const isFirstPoll =
-			seenIds.size === 0 && webhookData.initialized !== true;
+		const lastTimestamp = (webhookData.lastTimestamp as string | undefined) ?? '';
+		const isFirstPoll = !lastTimestamp;
 
 		const priorityFilter = this.getNodeParameter('priorityFilter') as string;
 		const workflowId = this.getWorkflow().id;
 
 		const results: INodeExecutionData[] = [];
+		let newestTimestamp = lastTimestamp;
 
 		if (event === 'newApproval') {
 			const statusFilter = this.getNodeParameter('statusFilter') as string;
@@ -179,11 +178,12 @@ export class OkrunitTrigger implements INodeType {
 			const approvals: ApprovalRecord[] = response.data ?? [];
 
 			if (isFirstPoll) {
+				// First poll: set the timestamp to now, only trigger on
+				// approvals created in the last 2 minutes
 				const twoMinutesAgo = new Date(
 					Date.now() - 2 * 60 * 1000,
 				).toISOString();
 				for (const approval of approvals) {
-					seenIds.add(approval.id);
 					if (
 						!approval.is_log &&
 						approval.created_at > twoMinutesAgo
@@ -192,15 +192,29 @@ export class OkrunitTrigger implements INodeType {
 							json: approval as unknown as IDataObject,
 						});
 					}
+					if (approval.created_at > newestTimestamp) {
+						newestTimestamp = approval.created_at;
+					}
+				}
+				// If no approvals at all, set timestamp to now
+				if (!newestTimestamp) {
+					newestTimestamp = new Date().toISOString();
 				}
 			} else {
+				// Subsequent polls: trigger on any approval created after
+				// the last timestamp we processed
 				for (const approval of approvals) {
-					if (!seenIds.has(approval.id) && !approval.is_log) {
+					if (
+						!approval.is_log &&
+						approval.created_at > lastTimestamp
+					) {
 						results.push({
 							json: approval as unknown as IDataObject,
 						});
 					}
-					seenIds.add(approval.id);
+					if (approval.created_at > newestTimestamp) {
+						newestTimestamp = approval.created_at;
+					}
 				}
 			}
 		} else if (event === 'approvalDecided') {
@@ -239,44 +253,53 @@ export class OkrunitTrigger implements INodeType {
 						Date.now() - 2 * 60 * 1000,
 					).toISOString();
 					for (const approval of approvals) {
-						seenIds.add(approval.id);
+						const ts = approval.decided_at ?? approval.created_at;
 						if (
 							!approval.is_log &&
 							approval.decided_at &&
-							approval.decided_at > twoMinutesAgo
+							ts > twoMinutesAgo
 						) {
 							results.push({
 								json: approval as unknown as IDataObject,
 							});
+						}
+						if (ts > newestTimestamp) {
+							newestTimestamp = ts;
 						}
 					}
 				} else {
 					for (const approval of approvals) {
+						const ts = approval.decided_at ?? approval.created_at;
 						if (
-							!seenIds.has(approval.id) &&
 							!approval.is_log &&
-							approval.decided_at
+							approval.decided_at &&
+							ts > lastTimestamp
 						) {
 							results.push({
 								json: approval as unknown as IDataObject,
 							});
 						}
-						seenIds.add(approval.id);
+						if (ts > newestTimestamp) {
+							newestTimestamp = ts;
+						}
 					}
 				}
 			}
+
+			if (isFirstPoll && !newestTimestamp) {
+				newestTimestamp = new Date().toISOString();
+			}
 		}
 
-		// Persist seen IDs (cap at 500 to prevent unbounded growth)
-		const allIds = Array.from(seenIds);
-		webhookData.seenIds = allIds.slice(-500);
-		webhookData.initialized = true;
+		// Persist the newest timestamp for the next poll
+		if (newestTimestamp > lastTimestamp) {
+			webhookData.lastTimestamp = newestTimestamp;
+		}
 
 		if (results.length === 0) return null;
 		return [results];
 	  } catch {
 		// Swallow errors so n8n does not deactivate the workflow.
-		// The next poll will retry automatically.
 		return null;
 	  }
 	}
