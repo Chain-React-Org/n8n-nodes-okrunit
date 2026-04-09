@@ -21,6 +21,7 @@ export class OkrunitTrigger implements INodeType {
 		icon: 'file:../../icons/okrunit.png',
 		group: ['trigger'],
 		version: 1,
+		subtitle: '={{$parameter["event"] === "approvalDecided" ? "Approval Decided" : "New Approval Request"}}',
 		description: 'Fires when approval events occur in OKRunit',
 		defaults: { name: 'OKrunit Trigger' },
 		usableAsTool: true,
