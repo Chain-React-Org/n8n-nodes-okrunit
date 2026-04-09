@@ -18,18 +18,19 @@ export const approvalCreateDescription: INodeProperties[] = [
 			show: showOnlyForApprovalCreate,
 		},
 		description:
-			'Pre-fill fields from a saved template. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+			'Select a template to auto-fill fields below. Any field you fill in will override the template value. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 	},
 	{
 		displayName: 'Title',
 		name: 'title',
 		type: 'string',
 		default: '',
+		placeholder: 'Leave blank to use template default',
 		displayOptions: {
 			show: showOnlyForApprovalCreate,
 		},
 		description:
-			'Title of the approval request. Leave blank to use the template default.',
+			'Title of the approval request. If blank, the template title is used (when a template is selected).',
 	},
 	{
 		displayName: 'Description',
@@ -39,11 +40,12 @@ export const approvalCreateDescription: INodeProperties[] = [
 			rows: 4,
 		},
 		default: '',
+		placeholder: 'Leave blank to use template default',
 		displayOptions: {
 			show: showOnlyForApprovalCreate,
 		},
 		description:
-			'Detailed description providing context for the reviewer. Leave blank to use the template default.',
+			'Detailed description providing context for the reviewer. If blank, the template description is used.',
 	},
 	{
 		displayName: 'Priority',
@@ -61,21 +63,7 @@ export const approvalCreateDescription: INodeProperties[] = [
 			show: showOnlyForApprovalCreate,
 		},
 		description:
-			'Priority level. Leave as "Use Template Default" to use the template priority.',
-	},
-	{
-		displayName: 'Action Type Name or ID',
-		name: 'actionType',
-		type: 'options',
-		typeOptions: {
-			loadOptionsMethod: 'getActionTypes',
-		},
-		default: '',
-		displayOptions: {
-			show: showOnlyForApprovalCreate,
-		},
-		description:
-			'Category of action being approved. Leave blank to use the template default. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+			'Priority level of the approval request.',
 	},
 	{
 		displayName: 'Wait for Decision',
@@ -98,6 +86,17 @@ export const approvalCreateDescription: INodeProperties[] = [
 			show: showOnlyForApprovalCreate,
 		},
 		options: [
+			{
+				displayName: 'Action Type Name or ID',
+				name: 'actionType',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getActionTypes',
+				},
+				default: '',
+				description:
+					'Category of action being approved (e.g. deploy, access_request). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+			},
 			{
 				displayName: 'Callback URL',
 				name: 'callbackUrl',

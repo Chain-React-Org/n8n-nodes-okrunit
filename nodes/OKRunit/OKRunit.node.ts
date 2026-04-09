@@ -201,11 +201,6 @@ export class OKRunit implements INodeType {
 							i,
 							'',
 						) as string;
-						const actionType = this.getNodeParameter(
-							'actionType',
-							i,
-							'',
-						) as string;
 						const waitForDecision = this.getNodeParameter(
 							'waitForDecision',
 							i,
@@ -229,7 +224,8 @@ export class OKRunit implements INodeType {
 						if (title) body.title = title;
 						if (description) body.description = description;
 						if (priority) body.priority = priority;
-						if (actionType) body.action_type = actionType;
+						if (additionalFields.actionType)
+							body.action_type = additionalFields.actionType;
 						if (additionalFields.contextHtml)
 							body.context_html = additionalFields.contextHtml;
 						if (additionalFields.expiresAt)
