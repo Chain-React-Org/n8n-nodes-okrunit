@@ -221,7 +221,7 @@ export class OKRunit implements INodeType {
 						};
 
 						if (templateId) body.template_id = templateId;
-						if (title) body.title = title;
+						body.title = title || 'Approval request from n8n';
 						if (description) body.description = description;
 						if (priority) body.priority = priority;
 						if (additionalFields.actionType)

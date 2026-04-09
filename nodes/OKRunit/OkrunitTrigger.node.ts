@@ -136,6 +136,7 @@ export class OkrunitTrigger implements INodeType {
 	async poll(
 		this: IPollFunctions,
 	): Promise<INodeExecutionData[][] | null> {
+	  try {
 		const authType = this.getNodeParameter('authentication', 0) as string;
 		const credentialType =
 			authType === 'oAuth2' ? 'okrunitOAuth2Api' : 'okrunitApi';
@@ -273,5 +274,10 @@ export class OkrunitTrigger implements INodeType {
 
 		if (results.length === 0) return null;
 		return [results];
+	  } catch {
+		// Swallow errors so n8n does not deactivate the workflow.
+		// The next poll will retry automatically.
+		return null;
+	  }
 	}
 }
