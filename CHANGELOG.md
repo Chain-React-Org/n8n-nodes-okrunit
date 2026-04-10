@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.6 (2026-04-09)
+
+### Fixed
+- **Trigger node stops firing after first execution.** Fixed two bugs: (1) silent error swallowing hid API failures, causing the trigger to silently stop working; (2) the poll timestamp advanced even when n8n dropped the execution due to concurrency limits, permanently losing approvals. Now errors surface properly, and the timestamp only advances when results are successfully delivered. Added seen-ID tracking to prevent duplicates.
+
 ## 0.9.2 (2026-04-09)
 
 ### Fixed

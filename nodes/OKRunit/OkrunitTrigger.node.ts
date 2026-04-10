@@ -5,6 +5,7 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 
 interface ApprovalRecord {
 	id: string;
@@ -137,7 +138,6 @@ export class OkrunitTrigger implements INodeType {
 	async poll(
 		this: IPollFunctions,
 	): Promise<INodeExecutionData[][] | null> {
-	  try {
 		const authType = this.getNodeParameter('authentication', 0) as string;
 		const credentialType =
 			authType === 'oAuth2' ? 'okrunitOAuth2Api' : 'okrunitApi';
@@ -145,12 +145,14 @@ export class OkrunitTrigger implements INodeType {
 
 		const webhookData = this.getWorkflowStaticData('node');
 		const lastTimestamp = (webhookData.lastTimestamp as string | undefined) ?? '';
+		const seenIds = (webhookData.seenIds as string[] | undefined) ?? [];
 		const isFirstPoll = !lastTimestamp;
 
 		const priorityFilter = this.getNodeParameter('priorityFilter') as string;
 		const workflowId = this.getWorkflow().id;
 
 		const results: INodeExecutionData[] = [];
+		const newSeenIds: string[] = [];
 		let newestTimestamp = lastTimestamp;
 
 		if (event === 'newApproval') {
@@ -163,23 +165,29 @@ export class OkrunitTrigger implements INodeType {
 			if (statusFilter) qs.status = statusFilter;
 			if (priorityFilter) qs.priority = priorityFilter;
 
-			const response =
-				(await this.helpers.httpRequestWithAuthentication.call(
-					this,
-					credentialType,
-					{
-						method: 'GET',
-						url: 'https://okrunit.com/api/v1/approvals',
-						json: true,
-						qs,
-					},
-				)) as { data?: ApprovalRecord[] };
+			let response: { data?: ApprovalRecord[] };
+			try {
+				response =
+					(await this.helpers.httpRequestWithAuthentication.call(
+						this,
+						credentialType,
+						{
+							method: 'GET',
+							url: 'https://okrunit.com/api/v1/approvals',
+							json: true,
+							qs,
+						},
+					)) as { data?: ApprovalRecord[] };
+			} catch (error) {
+				throw new NodeOperationError(
+					this.getNode(),
+					`Failed to fetch approvals: ${error instanceof Error ? error.message : String(error)}`,
+				);
+			}
 
 			const approvals: ApprovalRecord[] = response.data ?? [];
 
 			if (isFirstPoll) {
-				// First poll: set the timestamp to now, only trigger on
-				// approvals created in the last 2 minutes
 				const twoMinutesAgo = new Date(
 					Date.now() - 2 * 60 * 1000,
 				).toISOString();
@@ -191,26 +199,26 @@ export class OkrunitTrigger implements INodeType {
 						results.push({
 							json: approval as unknown as IDataObject,
 						});
+						newSeenIds.push(approval.id);
 					}
 					if (approval.created_at > newestTimestamp) {
 						newestTimestamp = approval.created_at;
 					}
 				}
-				// If no approvals at all, set timestamp to now
 				if (!newestTimestamp) {
 					newestTimestamp = new Date().toISOString();
 				}
 			} else {
-				// Subsequent polls: trigger on any approval created after
-				// the last timestamp we processed
 				for (const approval of approvals) {
 					if (
 						!approval.is_log &&
-						approval.created_at > lastTimestamp
+						approval.created_at > lastTimestamp &&
+						!seenIds.includes(approval.id)
 					) {
 						results.push({
 							json: approval as unknown as IDataObject,
 						});
+						newSeenIds.push(approval.id);
 					}
 					if (approval.created_at > newestTimestamp) {
 						newestTimestamp = approval.created_at;
@@ -234,17 +242,25 @@ export class OkrunitTrigger implements INodeType {
 				};
 				if (priorityFilter) qs.priority = priorityFilter;
 
-				const response =
-					(await this.helpers.httpRequestWithAuthentication.call(
-						this,
-						credentialType,
-						{
-							method: 'GET',
-							url: 'https://okrunit.com/api/v1/approvals',
-							json: true,
-							qs,
-						},
-					)) as { data?: ApprovalRecord[] };
+				let response: { data?: ApprovalRecord[] };
+				try {
+					response =
+						(await this.helpers.httpRequestWithAuthentication.call(
+							this,
+							credentialType,
+							{
+								method: 'GET',
+								url: 'https://okrunit.com/api/v1/approvals',
+								json: true,
+								qs,
+							},
+						)) as { data?: ApprovalRecord[] };
+				} catch (error) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`Failed to fetch approvals: ${error instanceof Error ? error.message : String(error)}`,
+					);
+				}
 
 				const approvals: ApprovalRecord[] = response.data ?? [];
 
@@ -262,6 +278,7 @@ export class OkrunitTrigger implements INodeType {
 							results.push({
 								json: approval as unknown as IDataObject,
 							});
+							newSeenIds.push(approval.id);
 						}
 						if (ts > newestTimestamp) {
 							newestTimestamp = ts;
@@ -273,34 +290,42 @@ export class OkrunitTrigger implements INodeType {
 						if (
 							!approval.is_log &&
 							approval.decided_at &&
-							ts > lastTimestamp
+							ts > lastTimestamp &&
+							!seenIds.includes(approval.id)
 						) {
 							results.push({
 								json: approval as unknown as IDataObject,
 							});
+							newSeenIds.push(approval.id);
 						}
 						if (ts > newestTimestamp) {
 							newestTimestamp = ts;
 						}
 					}
 				}
-			}
 
-			if (isFirstPoll && !newestTimestamp) {
-				newestTimestamp = new Date().toISOString();
+				if (isFirstPoll && !newestTimestamp) {
+					newestTimestamp = new Date().toISOString();
+				}
 			}
 		}
 
-		// Persist the newest timestamp for the next poll
-		if (newestTimestamp > lastTimestamp) {
+		// Only advance the timestamp when we actually have results to return.
+		// This prevents losing approvals when n8n drops the execution
+		// (e.g. "Do not start if already running" concurrency mode).
+		if (results.length > 0 && newestTimestamp > lastTimestamp) {
 			webhookData.lastTimestamp = newestTimestamp;
+			// Track IDs we've returned so we don't re-trigger if the timestamp
+			// doesn't advance (e.g. concurrent execution was dropped by n8n)
+			webhookData.seenIds = newSeenIds;
+		} else if (results.length === 0 && newestTimestamp > lastTimestamp) {
+			// No new matching results, but there are newer records.
+			// Safe to advance since there's nothing to lose.
+			webhookData.lastTimestamp = newestTimestamp;
+			webhookData.seenIds = [];
 		}
 
 		if (results.length === 0) return null;
 		return [results];
-	  } catch {
-		// Swallow errors so n8n does not deactivate the workflow.
-		return null;
-	  }
 	}
 }
