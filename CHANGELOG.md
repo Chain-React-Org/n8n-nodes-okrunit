@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.8 (2026-04-11)
+
+### Fixed
+- **Each new approval now triggers its own workflow execution.** Previously, if multiple approvals arrived between polls, they were batched into a single execution. Now the trigger returns one item per poll cycle, so each approval gets a separate execution. Remaining items are picked up on subsequent polls via the seen-ID tracking mechanism.
+
 ## 0.9.7 (2026-04-10)
 
 ### Fixed

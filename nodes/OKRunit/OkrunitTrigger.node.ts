@@ -319,28 +319,35 @@ export class OkrunitTrigger implements INodeType {
 			}
 		}
 
-		// Merge new seenIds with existing ones (new first), capped at 200
-		// to prevent unbounded growth while still providing dedup across polls.
+		if (results.length === 0) {
+			// No new matching results. If there are newer qualifying records,
+			// safe to advance timestamp since there's nothing to lose.
+			if (newestTimestamp > lastTimestamp) {
+				webhookData.lastTimestamp = newestTimestamp;
+				webhookData.seenIds = [];
+			}
+			return null;
+		}
+
+		// Return only ONE item per poll so each approval gets its own
+		// workflow execution. The rest will be picked up on subsequent polls
+		// via the seenIds dedup mechanism.
 		const MAX_SEEN_IDS = 200;
-		const mergedSeenIds = [...new Set([...newSeenIds, ...seenIds])].slice(
+		const itemToReturn = results[0];
+		const returnedId = newSeenIds[0];
+
+		const mergedSeenIds = [...new Set([returnedId, ...seenIds])].slice(
 			0,
 			MAX_SEEN_IDS,
 		);
+		webhookData.seenIds = mergedSeenIds;
 
-		if (results.length > 0 && newestTimestamp > lastTimestamp) {
+		// Only advance the timestamp when ALL items at the current window
+		// have been returned (i.e. this is the last one left).
+		if (results.length === 1 && newestTimestamp > lastTimestamp) {
 			webhookData.lastTimestamp = newestTimestamp;
-			webhookData.seenIds = mergedSeenIds;
-		} else if (results.length === 0 && newestTimestamp > lastTimestamp) {
-			// No new matching results, but there are newer qualifying records.
-			// Safe to advance since there's nothing to lose.
-			webhookData.lastTimestamp = newestTimestamp;
-			webhookData.seenIds = mergedSeenIds;
-		} else if (newSeenIds.length > 0) {
-			// Timestamp didn't advance but we have new seen IDs to remember
-			webhookData.seenIds = mergedSeenIds;
 		}
 
-		if (results.length === 0) return null;
-		return [results];
+		return [[itemToReturn]];
 	}
 }
