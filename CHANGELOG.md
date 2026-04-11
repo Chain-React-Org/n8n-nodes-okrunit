@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.7 (2026-04-10)
+
+### Fixed
+- **Trigger node reliably fires for all subsequent requests.** Five fixes: (1) use server-side `created_after` / `decided_after` filtering so the trigger only fetches genuinely new records instead of re-scanning the same 50; (2) only advance the timestamp cursor from records that pass all filters (not from `is_log` records that are excluded from results); (3) accumulate seen-ID tracking across polls (capped at 200) instead of replacing, preventing duplicates at timestamp boundaries; (4) normalize all timestamps to UTC Z-suffix format to eliminate string comparison issues between JavaScript's `"...Z"` and Supabase's `"...+00:00"`; (5) add `decided_after` API parameter so the Approval Decided event can efficiently query recently-decided approvals regardless of creation date.
+
 ## 0.9.6 (2026-04-09)
 
 ### Fixed

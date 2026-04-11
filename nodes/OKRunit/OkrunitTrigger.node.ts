@@ -7,6 +7,13 @@ import type {
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 
+/** Normalize any ISO-8601 timestamp to Z-suffix format for safe string comparison. */
+function normalizeTs(ts: string): string {
+	if (ts.endsWith('Z')) return ts;
+	if (ts.endsWith('+00:00')) return ts.slice(0, -6) + 'Z';
+	return new Date(ts).toISOString();
+}
+
 interface ApprovalRecord {
 	id: string;
 	created_at: string;
@@ -144,7 +151,8 @@ export class OkrunitTrigger implements INodeType {
 		const event = this.getNodeParameter('event') as string;
 
 		const webhookData = this.getWorkflowStaticData('node');
-		const lastTimestamp = (webhookData.lastTimestamp as string | undefined) ?? '';
+		const rawLastTimestamp = (webhookData.lastTimestamp as string | undefined) ?? '';
+		const lastTimestamp = rawLastTimestamp ? normalizeTs(rawLastTimestamp) : '';
 		const seenIds = (webhookData.seenIds as string[] | undefined) ?? [];
 		const isFirstPoll = !lastTimestamp;
 
@@ -164,6 +172,7 @@ export class OkrunitTrigger implements INodeType {
 			};
 			if (statusFilter) qs.status = statusFilter;
 			if (priorityFilter) qs.priority = priorityFilter;
+			if (lastTimestamp) qs.created_after = lastTimestamp;
 
 			let response: { data?: ApprovalRecord[] };
 			try {
@@ -192,17 +201,15 @@ export class OkrunitTrigger implements INodeType {
 					Date.now() - 2 * 60 * 1000,
 				).toISOString();
 				for (const approval of approvals) {
-					if (
-						!approval.is_log &&
-						approval.created_at > twoMinutesAgo
-					) {
+					const ts = normalizeTs(approval.created_at);
+					if (!approval.is_log && ts > twoMinutesAgo) {
 						results.push({
 							json: approval as unknown as IDataObject,
 						});
 						newSeenIds.push(approval.id);
 					}
-					if (approval.created_at > newestTimestamp) {
-						newestTimestamp = approval.created_at;
+					if (!approval.is_log && ts > newestTimestamp) {
+						newestTimestamp = ts;
 					}
 				}
 				if (!newestTimestamp) {
@@ -210,9 +217,10 @@ export class OkrunitTrigger implements INodeType {
 				}
 			} else {
 				for (const approval of approvals) {
+					const ts = normalizeTs(approval.created_at);
 					if (
 						!approval.is_log &&
-						approval.created_at > lastTimestamp &&
+						ts > lastTimestamp &&
 						!seenIds.includes(approval.id)
 					) {
 						results.push({
@@ -220,8 +228,8 @@ export class OkrunitTrigger implements INodeType {
 						});
 						newSeenIds.push(approval.id);
 					}
-					if (approval.created_at > newestTimestamp) {
-						newestTimestamp = approval.created_at;
+					if (!approval.is_log && ts > newestTimestamp) {
+						newestTimestamp = ts;
 					}
 				}
 			}
@@ -241,6 +249,7 @@ export class OkrunitTrigger implements INodeType {
 					exclude_source_id: `n8n-${workflowId}`,
 				};
 				if (priorityFilter) qs.priority = priorityFilter;
+				if (lastTimestamp) qs.decided_after = lastTimestamp;
 
 				let response: { data?: ApprovalRecord[] };
 				try {
@@ -269,7 +278,7 @@ export class OkrunitTrigger implements INodeType {
 						Date.now() - 2 * 60 * 1000,
 					).toISOString();
 					for (const approval of approvals) {
-						const ts = approval.decided_at ?? approval.created_at;
+						const ts = normalizeTs(approval.decided_at ?? approval.created_at);
 						if (
 							!approval.is_log &&
 							approval.decided_at &&
@@ -280,13 +289,13 @@ export class OkrunitTrigger implements INodeType {
 							});
 							newSeenIds.push(approval.id);
 						}
-						if (ts > newestTimestamp) {
+						if (!approval.is_log && approval.decided_at && ts > newestTimestamp) {
 							newestTimestamp = ts;
 						}
 					}
 				} else {
 					for (const approval of approvals) {
-						const ts = approval.decided_at ?? approval.created_at;
+						const ts = normalizeTs(approval.decided_at ?? approval.created_at);
 						if (
 							!approval.is_log &&
 							approval.decided_at &&
@@ -298,7 +307,7 @@ export class OkrunitTrigger implements INodeType {
 							});
 							newSeenIds.push(approval.id);
 						}
-						if (ts > newestTimestamp) {
+						if (!approval.is_log && approval.decided_at && ts > newestTimestamp) {
 							newestTimestamp = ts;
 						}
 					}
@@ -310,19 +319,25 @@ export class OkrunitTrigger implements INodeType {
 			}
 		}
 
-		// Only advance the timestamp when we actually have results to return.
-		// This prevents losing approvals when n8n drops the execution
-		// (e.g. "Do not start if already running" concurrency mode).
+		// Merge new seenIds with existing ones (new first), capped at 200
+		// to prevent unbounded growth while still providing dedup across polls.
+		const MAX_SEEN_IDS = 200;
+		const mergedSeenIds = [...new Set([...newSeenIds, ...seenIds])].slice(
+			0,
+			MAX_SEEN_IDS,
+		);
+
 		if (results.length > 0 && newestTimestamp > lastTimestamp) {
 			webhookData.lastTimestamp = newestTimestamp;
-			// Track IDs we've returned so we don't re-trigger if the timestamp
-			// doesn't advance (e.g. concurrent execution was dropped by n8n)
-			webhookData.seenIds = newSeenIds;
+			webhookData.seenIds = mergedSeenIds;
 		} else if (results.length === 0 && newestTimestamp > lastTimestamp) {
-			// No new matching results, but there are newer records.
+			// No new matching results, but there are newer qualifying records.
 			// Safe to advance since there's nothing to lose.
 			webhookData.lastTimestamp = newestTimestamp;
-			webhookData.seenIds = [];
+			webhookData.seenIds = mergedSeenIds;
+		} else if (newSeenIds.length > 0) {
+			// Timestamp didn't advance but we have new seen IDs to remember
+			webhookData.seenIds = mergedSeenIds;
 		}
 
 		if (results.length === 0) return null;
