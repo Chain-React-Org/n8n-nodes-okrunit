@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.9 (2026-04-11)
+
+### Added
+- **Separate Approved/Rejected outputs on "Wait for Decision".** When "Wait for Decision" is enabled, the OKRunit node now has two outputs: Approved and Rejected. This lets you wire different downstream logic for each outcome. Previously, both decisions continued on a single output, so rejected requests still ran subsequent nodes.
+
 ## 0.9.8 (2026-04-11)
 
 ### Fixed

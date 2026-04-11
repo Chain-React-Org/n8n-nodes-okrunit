@@ -61,7 +61,11 @@ export class OKRunit implements INodeType {
 		},
 		usableAsTool: true,
 		inputs: [NodeConnectionTypes.Main],
-		outputs: [NodeConnectionTypes.Main],
+		outputs: `={{
+			$parameter["operation"] === "create" && $parameter["waitForDecision"]
+				? ["Approved", "Rejected"]
+				: ["main"]
+		}}`,
 		credentials: [
 			{
 				name: 'okrunitApi',
@@ -323,23 +327,53 @@ export class OKRunit implements INodeType {
 								}
 							}
 
-							returnData.push({
+							const item: INodeExecutionData = {
 								json: result,
 								pairedItem: { item: i },
-							});
-							return [returnData];
+							};
+							// Route to output 0 (Approved) or output 1 (Rejected)
+							const isApproved = result.status === 'approved';
+							return isApproved ? [[item], []] : [[], [item]];
+						}
+
+						if (waitForDecision) {
+							// Cloud/public n8n: use callback to resume
+							await this.putExecutionToWait(WAIT_INDEFINITELY);
+
+							// Execution resumes here after OKRunit calls the callback URL.
+							// Re-fetch the approval to get the actual decision status.
+							const approvalData = (response as IDataObject)
+								.data as IDataObject | undefined;
+							const approvalId =
+								approvalData?.id ??
+								(response as IDataObject).id;
+
+							const decisionResponse =
+								await this.helpers.httpRequestWithAuthentication.call(
+									this,
+									credentialType,
+									{
+										method: 'GET',
+										url: `${baseURL}/api/v1/approvals/${approvalId}`,
+										json: true,
+									},
+								);
+
+							const decisionData = (decisionResponse as IDataObject)
+								.data as IDataObject | undefined;
+							const result = decisionData ?? (decisionResponse as IDataObject);
+							const item: INodeExecutionData = {
+								json: result,
+								pairedItem: { item: i },
+							};
+							const isApproved = result.status === 'approved';
+							return isApproved ? [[item], []] : [[], [item]];
 						}
 
 						returnData.push({
 							json: response as IDataObject,
 							pairedItem: { item: i },
 						});
-
-						if (waitForDecision) {
-							// Cloud/public n8n: use callback to resume
-							await this.putExecutionToWait(WAIT_INDEFINITELY);
-							return [returnData];
-						}
 					} else if (operation === 'createLog') {
 						const title = this.getNodeParameter('logTitle', i) as string;
 						const additionalFields = this.getNodeParameter(
