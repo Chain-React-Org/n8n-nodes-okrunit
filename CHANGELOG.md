@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.11 (2026-04-11)
+
+### Fixed
+- **Dynamic outputs expression handles default parameter values.** n8n does not save parameters with default values to workflow JSON, so `$parameter["operation"]` was `undefined` instead of `"create"`. Added nullish coalescing fallback so the Approved/Rejected outputs appear correctly without needing to explicitly set the operation.
+
 ## 0.9.10 (2026-04-11)
 
 ### Fixed
