@@ -228,7 +228,10 @@ export class OKRunit implements INodeType {
 						};
 
 						if (templateId) body.template_id = templateId;
-						body.title = title || 'Approval request from n8n';
+						// Only send fields the user explicitly filled in.
+						// Empty fields let the API apply template defaults.
+						if (title) body.title = title;
+						if (!title && !templateId) body.title = 'Approval request from n8n';
 						if (description) body.description = description;
 						if (priority) body.priority = priority;
 						if (additionalFields.actionType)
