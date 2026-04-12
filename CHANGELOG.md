@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.10 (2026-04-11)
+
+### Fixed
+- **Approved/Rejected outputs now activate correctly.** The dynamic outputs expression checked `$parameter["waitForDecision"]` which returned `undefined` (falsy) when the parameter used its default value of `true`, since n8n only saves non-default values to the workflow JSON. Changed to `!== false` so the dual outputs activate by default.
+
 ## 0.9.9 (2026-04-11)
 
 ### Added
