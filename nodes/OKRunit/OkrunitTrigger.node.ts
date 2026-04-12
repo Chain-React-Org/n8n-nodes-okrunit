@@ -174,11 +174,11 @@ export class OkrunitTrigger implements INodeType {
 			const approvals: ApprovalRecord[] = response.data ?? [];
 			if (approvals.length === 0) return null;
 
-			const approval = approvals[0];
+			const { id: _id, ...rest } = approvals[0];
 			return [[{
 				json: {
-					...approval,
-					request_id: approval.id,
+					request_id: _id,
+					...rest,
 				} as unknown as IDataObject,
 			}]];
 		}
@@ -381,8 +381,9 @@ export class OkrunitTrigger implements INodeType {
 			webhookData.lastTimestamp = newestTimestamp;
 		}
 
-		// Add request_id alias so it's easy to find in downstream nodes
-		itemToReturn.json.request_id = itemToReturn.json.id;
+		// Rename id to request_id for consistency with action node fields
+		const { id: rawId, ...restFields } = itemToReturn.json;
+		itemToReturn.json = { request_id: rawId, ...restFields } as IDataObject;
 		return [[itemToReturn]];
 	}
 }
