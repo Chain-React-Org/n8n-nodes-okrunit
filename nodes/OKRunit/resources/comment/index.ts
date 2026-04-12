@@ -32,7 +32,7 @@ export const commentDescription: INodeProperties[] = [
 		default: 'create',
 	},
 	{
-		displayName: 'Approval ID',
+		displayName: 'Request ID',
 		name: 'approvalId',
 		type: 'string',
 		required: true,
@@ -40,7 +40,7 @@ export const commentDescription: INodeProperties[] = [
 		displayOptions: {
 			show: showOnlyForComment,
 		},
-		description: 'The ID of the approval request',
+		description: 'The ID of the approval request (use {{ $json.request_id }} from the trigger)',
 	},
 	...commentCreateDescription,
 	...commentGetAllDescription,

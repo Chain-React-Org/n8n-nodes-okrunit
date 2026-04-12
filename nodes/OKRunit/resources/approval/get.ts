@@ -7,7 +7,7 @@ const showOnlyForApprovalGet = {
 
 export const approvalGetDescription: INodeProperties[] = [
 	{
-		displayName: 'Approval ID',
+		displayName: 'Request ID',
 		name: 'approvalId',
 		type: 'string',
 		required: true,
@@ -15,6 +15,6 @@ export const approvalGetDescription: INodeProperties[] = [
 		displayOptions: {
 			show: showOnlyForApprovalGet,
 		},
-		description: 'The ID of the approval request to retrieve',
+		description: 'The ID of the approval request to retrieve (use {{ $json.request_id }} from the trigger)',
 	},
 ];

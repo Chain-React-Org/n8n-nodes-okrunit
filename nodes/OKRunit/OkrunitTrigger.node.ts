@@ -149,6 +149,39 @@ export class OkrunitTrigger implements INodeType {
 		const credentialType =
 			authType === 'oAuth2' ? 'okrunitOAuth2Api' : 'okrunitApi';
 		const event = this.getNodeParameter('event') as string;
+		const isManual = this.getMode() === 'manual';
+
+		// In manual/test mode, return the most recent approval so the user
+		// can see available fields and use them as variables in later nodes.
+		if (isManual) {
+			const qs: Record<string, string> = { page_size: '1' };
+			if (event === 'approvalDecided') {
+				qs.status = 'approved,rejected';
+			}
+
+			const response =
+				(await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					credentialType,
+					{
+						method: 'GET',
+						url: 'https://okrunit.com/api/v1/approvals',
+						json: true,
+						qs,
+					},
+				)) as { data?: ApprovalRecord[] };
+
+			const approvals: ApprovalRecord[] = response.data ?? [];
+			if (approvals.length === 0) return null;
+
+			const approval = approvals[0];
+			return [[{
+				json: {
+					...approval,
+					request_id: approval.id,
+				} as unknown as IDataObject,
+			}]];
+		}
 
 		const webhookData = this.getWorkflowStaticData('node');
 		const rawLastTimestamp = (webhookData.lastTimestamp as string | undefined) ?? '';
@@ -348,6 +381,8 @@ export class OkrunitTrigger implements INodeType {
 			webhookData.lastTimestamp = newestTimestamp;
 		}
 
+		// Add request_id alias so it's easy to find in downstream nodes
+		itemToReturn.json.request_id = itemToReturn.json.id;
 		return [[itemToReturn]];
 	}
 }

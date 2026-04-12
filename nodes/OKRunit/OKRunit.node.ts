@@ -63,8 +63,11 @@ export class OKRunit implements INodeType {
 		inputs: [NodeConnectionTypes.Main],
 		outputs: `={{
 			($parameter["operation"] ?? "create") === "create" && $parameter["waitForDecision"] !== false
-				? ["Approved", "Rejected"]
-				: ["main"]
+				? [
+					{ type: "main", displayName: "Approved" },
+					{ type: "main", displayName: "Rejected" }
+				  ]
+				: [{ type: "main" }]
 		}}`,
 		credentials: [
 			{
